@@ -49,7 +49,7 @@ def run_clinical_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iterat
         custom_splits = splits, 
         run_nested_evaluation=False, 
         run_shap=False,
-        conda_env='pp3'
+        conda_env='Aya_pp3'
     )
     pred.run_nested_evaluation(plot=False)
     nested_res, train_test_scores = pred.get_nested_predictions(plot=False)
@@ -105,10 +105,9 @@ def run_microbiome_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iter
         cpus=6,
         mem='24G',
         hours=24,
-        seed=1,
         run_nested_evaluation=False, 
         custom_splits = splits,
-        conda_env='pp3'
+        conda_env='Aya_pp3'
     )
     pred.run_nested_evaluation(plot=False)
     nested_res, train_test_scores = pred.get_nested_predictions(plot=False)
@@ -155,7 +154,6 @@ def run_genus_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iteration
         robust=num_robust, 
         iterations=iterations,
         stratified=True,
-        seed=1,
         out_file=f'{out_path}/{RUN_NAME}.pkl',
         run_shap=False, 
         on_cluster=on_cluster,
@@ -166,7 +164,7 @@ def run_genus_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iteration
         seed=1,
         run_nested_evaluation=False, 
         custom_splits = splits,
-        conda_env='pp3'
+        conda_env='Aya_pp3'
     )
     pred.run_nested_evaluation(plot=False)
     nested_res, train_test_scores = pred.get_nested_predictions(plot=False)
