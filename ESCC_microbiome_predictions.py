@@ -70,11 +70,13 @@ def run_microbiome_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iter
         ],
 
         'feature_selection_method':[  
-            [FeatureSelectionMethods.UNIVAR] 
+            [FeatureSelectionMethods.UNIVAR],
+            [FeatureSelectionMethods.LASSO] 
         ],
         'univar_score_func': ['f'], 
         'univar_mode': ['k_best'],
-        'univar_param': [0.01,0.05,0.1,0.25,0.5,0.75,-1]
+        'univar_param': [0.01,0.05,0.1,0.25,0.5,0.75,-1],
+        'lasso_k': [0.01,0.05,0.1,0.25,0.5,0.75,0.9,-1]
     }
 
     model_params = Defaults.LOGISTIC
@@ -126,11 +128,13 @@ def run_genus_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iteration
         ],
 
         'feature_selection_method':[  
-            [FeatureSelectionMethods.UNIVAR] 
+            [FeatureSelectionMethods.UNIVAR],
+            [FeatureSelectionMethods.LASSO] 
         ],
         'univar_score_func': ['f'], 
         'univar_mode': ['k_best'],
-        'univar_param': [0.01,0.05,0.1,0.25,0.5,0.75,-1]
+        'univar_param': [0.01,0.05,0.1,0.25,0.5,0.75,-1],
+        'lasso_k': [0.01,0.05,0.1,0.25,0.5,0.75,0.9,-1]
     }
 
     model_params = Defaults.LOGISTIC
@@ -210,9 +214,9 @@ def main(out_path = 'predictions/'):
     microbiome_res = run_microbiome_pred(microbiome_features,md,splits,num_nests,num_folds,num_robust,out_path,1000,on_cluster)
     genus_res = run_genus_pred(genus_features,md,splits,num_nests,num_folds,num_robust,out_path,1000,on_cluster)
 
-    clinical_res.to_csv(f'{out_path}/clinical_res.csv',index=True)
-    microbiome_res.to_csv(f'{out_path}/microbiome_res.csv',index=True)
-    genus_res.to_csv(f'{out_path}/genus_res.csv',index=True)
+    clinical_res.to_csv(f'{out_path}/clinical_res_lasso.csv',index=True)
+    microbiome_res.to_csv(f'{out_path}/microbiome_res_lasso.csv',index=True)
+    genus_res.to_csv(f'{out_path}/genus_res_lasso.csv',index=True)
 
 if __name__=='__main__':
     main()
