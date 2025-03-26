@@ -62,7 +62,7 @@ def run_microbiome_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iter
         'steps': [
             ['CountFilter','VarianceFilter','Preprocessor','FeatureSelector'], 
         ],    
-        'count_filter_threshold': [1,5,10],
+        'count_filter_threshold': [1,5,10,20],
         'count_filter_num_samples': [0,0.01,0.05,0.1,0.5],
          
         'preprocessing_method': [
@@ -202,7 +202,7 @@ def main(out_path = 'predictions/'):
 
     on_cluster = True
     num_folds = 5
-    num_robust = 3
+    num_robust = 5
     group_by = 'Batch'
     num_nests = len(md[group_by].unique())
 
