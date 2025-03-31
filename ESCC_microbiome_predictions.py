@@ -171,6 +171,63 @@ def run_genus_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iteration
     nested_res.sort_index(inplace=True)
     return nested_res
 
+def run_species_pred(X,md,splits,num_nests,num_folds,num_robust,out_path,iterations = 500,on_cluster=False):
+    run_params = {
+        'steps': [
+            ['CountFilter','VarianceFilter','Preprocessor','FeatureSelector'], 
+        ],    
+        'count_filter_threshold': [1,5,10,20],
+        'count_filter_num_samples': [0,0.01,0.05,0.1,0.5],
+         
+        'preprocessing_method': [
+            PreprocessingMethods.CLR,
+        ],
+
+        'feature_selection_method':[  
+            [FeatureSelectionMethods.UNIVAR],
+            [FeatureSelectionMethods.LASSO] 
+        ],
+        'univar_score_func': ['f'], 
+        'univar_mode': ['k_best'],
+        'univar_param': [0.01,0.05,0.1,0.25,0.5,0.75,-1],
+        'lasso_k': [0.01,0.05,0.1,0.25,0.5,0.75,0.9,-1]
+    }
+
+    model_params = Defaults.LOGISTIC
+
+    RUN_NAME = 'species_logistic'
+    pred = Prediction(
+        run_name=RUN_NAME,
+        X=X,
+        md=md,
+        model_type=ModelType.LOGISTIC,
+        run_hp_space=run_params,
+        model_hp_space=model_params
+    )
+
+    pred.run(
+        outer_folds=num_nests, 
+        inner_folds=num_folds, 
+        robust=num_robust, 
+        iterations=iterations,
+        stratified=True,
+        out_file=f'{out_path}/{RUN_NAME}.pkl',
+        run_shap=False, 
+        on_cluster=on_cluster,
+        n_jobs=50,
+        cpus=6,
+        mem='24G',
+        hours=24,
+        seed=1,
+        run_nested_evaluation=False, 
+        custom_splits = splits,
+        conda_env='Aya_pp3'
+    )
+    pred.run_nested_evaluation(plot=False)
+    nested_res, train_test_scores = pred.get_nested_predictions(plot=False)
+    nested_res.sort_index(inplace=True)
+    return nested_res
+
 def create_splits(md,X,group,num_folds,num_robust):
     splits = []
     for nest,batch in enumerate(sorted(md[group].unique())):
@@ -197,24 +254,32 @@ def main(out_path = 'predictions/'):
 
     microbiome_features = pd.read_csv("data/feature_table_decontaminated.csv",index_col=0).T.reindex(md.index)
     taxonomy = pd.read_csv('data/taxonomy.csv',index_col=0)
+    taxonomy_species = pd.read_csv('data/homd_species.csv',index_col=0)
+ 
     genus_features = microbiome_features.T.join(taxonomy['Genus'],how='inner').set_index('Genus')
     genus_features = genus_features.groupby(genus_features.index).sum().T.reindex(md.index)
 
+    species_features = microbiome_features.T.join(taxonomy_species['Taxon'],how='inner').set_index('Taxon') 
+    species_features = species_features.groupby(species_features.index).sum().T.reindex(md.index)
+    
     on_cluster = True
     num_folds = 5
     num_robust = 5
     group_by = 'Batch'
     num_nests = len(md[group_by].unique())
+    suffix = '11_5_5_1000' # 11 outer, 5 inner, 5 robust, 1000 iterations
 
     splits = create_splits(md,clinical_features,group_by,num_folds,num_robust)
 
     clinical_res = run_clinical_pred(clinical_features,md,splits,num_nests,num_folds,num_robust,out_path,1000,on_cluster)
     microbiome_res = run_microbiome_pred(microbiome_features,md,splits,num_nests,num_folds,num_robust,out_path,1000,on_cluster)
     genus_res = run_genus_pred(genus_features,md,splits,num_nests,num_folds,num_robust,out_path,1000,on_cluster)
+    species_res = run_species_pred(species_features,md,splits,num_nests,num_folds,num_robust,out_path,1000,on_cluster)
 
-    clinical_res.to_csv(f'{out_path}/clinical_res_lasso.csv',index=True)
-    microbiome_res.to_csv(f'{out_path}/microbiome_res_lasso.csv',index=True)
-    genus_res.to_csv(f'{out_path}/genus_res_lasso.csv',index=True)
+    clinical_res.to_csv(f'{out_path}/clinical_res{suffix}.csv',index=True)
+    microbiome_res.to_csv(f'{out_path}/microbiome_res{suffix}.csv',index=True)
+    genus_res.to_csv(f'{out_path}/genus_res{suffix}.csv',index=True)
+    species_res.to_csv(f'{out_path}/species_res{suffix}.csv',index=True)
 
 if __name__=='__main__':
     main()
