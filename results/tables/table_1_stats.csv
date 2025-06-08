@@ -1,0 +1,14 @@
+variable,p_value,test
+Age,4.707381131662e-05,Mann-Whitney U
+Batch,0.002654287175785669,Chi-squared
+Hot Beverage Consumption,0.010146182397509678,Chi-squared
+Education,0.013509506184550473,Chi-squared
+Education Level,0.02248576086808853,Chi-squared
+Alcohol,0.029049404384675463,Chi-squared
+Cooking Location,0.03035822175535728,Chi-squared
+HIV,0.05253480035202689,Chi-squared
+Smoking,0.21766977226429501,Chi-squared
+Marriage Status,0.30257461127701174,Chi-squared
+Residence,0.36367841926510214,Chi-squared
+Sex,0.6737044330446396,Chi-squared
+Diabetes,0.6823960120935775,Chi-squared
