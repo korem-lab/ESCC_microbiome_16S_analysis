@@ -40,7 +40,7 @@ def load_data():
         "feature_ra": feature_ra_filtered,
     }
 
-def table_1(metadata):
+def table_S1(metadata):
     clinical = metadata.copy()
     clinical.replace({"Smoking":{2:1,3:0}},inplace=True)
     clinical = clinical.fillna('NA')
@@ -70,7 +70,7 @@ def table_1(metadata):
             test_type = 'Chi-squared'
         results.append({'variable':col,'p_value':p,'test':test_type})
     pval_df = pd.DataFrame(results).sort_values('p_value')
-    pval_df.to_csv(os.path.join(RESULTS_DIR,'tables','table_1_stats.csv'),index=False)
+    pval_df.to_csv(os.path.join(RESULTS_DIR,'tables','table_S1_stats.csv'),index=False)
 
 def fig_1A(rarefied_table):
     shannon_index = rarefied_table.apply(plot_utils.sdi, axis=1).to_frame(name="shannon")
@@ -142,7 +142,7 @@ def fig_2A(feature_ra,taxonomy):
         genus_carriage.append({"Genus": genus, "control_carriage": ctrl_carry, "escc_carriage": escc_carry})
     genus_carriage = pd.DataFrame(genus_carriage).set_index('Genus')
     genus_results = genus_results.join(genus_carriage)
-    genus_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S1.csv'))
+    genus_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S2.csv'))
 
     for result in genus_results[genus_results["adj_FDR"] < 0.05].iterrows(): 
         genus = result[0]
@@ -177,7 +177,7 @@ def fig_2B(feature_ra,taxonomy):
         asv_carriage.append({"ASV": asv, "control_carriage": ctrl_carry, "escc_carriage": escc_carry})
     asv_carriage = pd.DataFrame(asv_carriage).set_index('ASV')
     asv_results = asv_results.join(asv_carriage)
-    asv_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S2.csv'))
+    asv_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S3.csv'))
 
     for result in asv_results[asv_results['adj_FDR'] < 0.05].iterrows():
         taxon = result[0]
@@ -215,7 +215,7 @@ def fig_2C(feature_ra,taxonomy):
         fuso_carriage.append({"ASV": asv, "control_carriage": ctrl_carry, "escc_carriage": escc_carry})
     fuso_carriage = pd.DataFrame(fuso_carriage).set_index('ASV')
     fuso_results = fuso_results.join(fuso_carriage)
-    fuso_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S3.csv'))
+    fuso_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S4.csv'))
 
     for result in fuso_results[fuso_results['adj_FDR'] < 0.05].iterrows():
         taxon = result[0]
@@ -506,7 +506,7 @@ def fig_S4AB():
 
 def main():
     data = load_data()
-    table_1(data['metadata'])
+    table_S1(data['metadata'])
     # diversity
     fig_1A(data['rarefied_table'])
     fig_1B_S1()
