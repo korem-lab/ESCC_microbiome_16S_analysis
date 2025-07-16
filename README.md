@@ -1,6 +1,6 @@
 # ESCC_microbiome_16S_analysis
 
-This repository contains the results and code used to generate figures supporting our manuscript titled "Oral microbiome alterations are associated with esophageal squamous cell carcinoma in South Africa"
+This repository contains the results and code used to generate figures supporting our manuscript titled "A generalizable cross-continent prediction of esophageal squamous cell carcinoma using the oral microbiome"
 
 | Folder/file              | Description                                                                                                                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
