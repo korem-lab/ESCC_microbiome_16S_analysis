@@ -40,7 +40,7 @@ def load_data():
         "feature_ra": feature_ra_filtered,
     }
 
-def table_S1(metadata):
+def table_1(metadata):
     clinical = metadata.copy()
     clinical.replace({"Smoking":{2:1,3:0}},inplace=True)
     clinical = clinical.fillna('NA')
@@ -70,7 +70,7 @@ def table_S1(metadata):
             test_type = 'Chi-squared'
         results.append({'variable':col,'p_value':p,'test':test_type})
     pval_df = pd.DataFrame(results).sort_values('p_value')
-    pval_df.to_csv(os.path.join(RESULTS_DIR,'tables','table_S1_stats.csv'),index=False)
+    pval_df.to_csv(os.path.join(RESULTS_DIR,'tables','table_1_stats.csv'),index=False)
 
 def fig_1A(rarefied_table):
     shannon_index = rarefied_table.apply(plot_utils.sdi, axis=1).to_frame(name="shannon")
@@ -105,11 +105,45 @@ def fig_1A(rarefied_table):
     plt.savefig(os.path.join(RESULTS_DIR,'figures','fig_1A.png'))
     plt.close()
 
-def fig_1B_S1():
+def fig_S1A(rarefied_table): # chao1
+    richness_index = rarefied_table.apply(plot_utils.sdi, axis=1).to_frame(name="richness")
+    richness_index["Cancer"] = richness_index.index.str.contains("CESCC").astype(int)
+
+    x = richness_index["Cancer"].astype(str)
+    y = richness_index["richness"]
+    stat,p_value = mannwhitneyu(richness_index.loc[richness_index["Cancer"] == 1,"richness"],richness_index.loc[richness_index["Cancer"] == 0,"richness"],alternative='two-sided')
+
+    my_pal = {"0": "#00AEEF", "1": "#ED1C24"}
+    sns.set_theme(style="white", palette=None)
+    sns.set_style("ticks")
+    fig, ax = plt.subplots(figsize=(3, 4.5))
+    sns.boxplot(x=x,y=y,fliersize=2,linewidth=1.4, hue=x, palette=my_pal,ax=ax)
+    sns.swarmplot(x=x,y=y,color="black",s=4,ax=ax)
+
+    ax.set_ylabel("Richness")
+    ax.set_ylim(1.75,6)
+    ax.set_xlabel("")
+    ax.set_xticklabels(['Control', 'ESCC'], size=12)
+    ax.tick_params(labelsize=12,bottom=False,left=True)
+    x1, x2 = 0, 1
+    y_max = y.max() + 0.2 
+    line_height = y_max + 0.1 
+    ax.plot([x1, x1], [y_max, line_height], color='black', linewidth=1.2)
+    ax.plot([x2, x2], [y_max, line_height], color='black', linewidth=1.2)
+    ax.plot([x1, x2], [line_height, line_height], color='black', linewidth=1.2)
+
+    p_text = f"$\\mathit{{p}} = $ {p_value:.4f}"
+    ax.text((x1 + x2) * 0.5, line_height + 0.05, p_text, ha='center', va='bottom', fontsize=11)
+    fig.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR,'figures','fig_S1A.png'))
+    plt.close()
+
+
+def fig_1B_S1B():
     unweighted_matrix = pd.read_csv(os.path.join(RESULTS_DIR,'diversity','unweighted-unifrac-distance-matrix.tsv'),sep='\t',index_col=0)
     weighted_matrix = pd.read_csv(os.path.join(RESULTS_DIR,'diversity','weighted-unifrac-distance-matrix.tsv'), sep='\t', index_col=0)
     plot_utils.pcoa_plot(unweighted_matrix,"",10000,False,os.path.join(RESULTS_DIR,'figures','fig_1B.png'))
-    plot_utils.pcoa_plot(weighted_matrix,"",10000,True,os.path.join(RESULTS_DIR,'figures','fig_S1.png'))
+    plot_utils.pcoa_plot(weighted_matrix,"",10000,True,os.path.join(RESULTS_DIR,'figures','fig_S1B.png'))
 
 def fig_2A(feature_ra,taxonomy):
     save_path = os.path.join(RESULTS_DIR,'figures','fig_2A')
@@ -142,7 +176,7 @@ def fig_2A(feature_ra,taxonomy):
         genus_carriage.append({"Genus": genus, "control_carriage": ctrl_carry, "escc_carriage": escc_carry})
     genus_carriage = pd.DataFrame(genus_carriage).set_index('Genus')
     genus_results = genus_results.join(genus_carriage)
-    genus_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S2.csv'))
+    genus_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S4.csv'))
 
     for result in genus_results[genus_results["adj_FDR"] < 0.05].iterrows(): 
         genus = result[0]
@@ -177,7 +211,7 @@ def fig_2B(feature_ra,taxonomy):
         asv_carriage.append({"ASV": asv, "control_carriage": ctrl_carry, "escc_carriage": escc_carry})
     asv_carriage = pd.DataFrame(asv_carriage).set_index('ASV')
     asv_results = asv_results.join(asv_carriage)
-    asv_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S3.csv'))
+    asv_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S5.csv'))
 
     for result in asv_results[asv_results['adj_FDR'] < 0.05].iterrows():
         taxon = result[0]
@@ -215,14 +249,14 @@ def fig_2C(feature_ra,taxonomy):
         fuso_carriage.append({"ASV": asv, "control_carriage": ctrl_carry, "escc_carriage": escc_carry})
     fuso_carriage = pd.DataFrame(fuso_carriage).set_index('ASV')
     fuso_results = fuso_results.join(fuso_carriage)
-    fuso_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S4.csv'))
+    fuso_results.to_csv(os.path.join(RESULTS_DIR,'tables','table_S6.csv'))
 
     for result in fuso_results[fuso_results['adj_FDR'] < 0.05].iterrows():
         taxon = result[0]
         p = result[1]['adj_FDR']
         plot_utils.taxa_boxplot(fuso_ra,taxon,p,True,1e-3,os.path.join(save_path,f'{taxon}.png'))
 
-def fig_3A_S3A(): 
+def fig_3A_S4A(): 
     save_path = os.path.join(RESULTS_DIR,'figures')
     pred_asv = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','southafrica','pred_asv.csv'),index_col=0)
     pred_clinical = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','southafrica','pred_clinical.csv'),index_col=0)
@@ -232,7 +266,7 @@ def fig_3A_S3A():
     labels = ["Microbiome,ASV","Microbiome,Species","Clinical","Microbiome,ASV + Clinical"]
     colors = ['C0','C1','C2','C3']
     plot_utils.plot_roc_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.1,os.path.join(RESULTS_DIR,'figures','fig_3A.png'))
-    plot_utils.plot_pr_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.1,os.path.join(RESULTS_DIR,'figures','fig_S3A.png'),'one')
+    plot_utils.plot_pr_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.1,os.path.join(RESULTS_DIR,'figures','fig_S4A.png'),'one')
 
 def fig_3B():
     values_df = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','southafrica','shap_values_asv.csv'))
@@ -304,7 +338,7 @@ def fig_S2B():
     plt.savefig(os.path.join(RESULTS_DIR,'figures','fig_S2B.png'))
     plt.close()
 
-def fig_3C_S3B(): 
+def fig_3C_S4B(): 
     preds = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','external_val','preds_external_iters.csv'),index_col=0)
     mean_fpr = np.linspace(0,1,100)
     mean_recall = np.linspace(0,1,100)
@@ -413,10 +447,10 @@ def fig_3C_S3B():
     )
     leg.get_frame().set_edgecolor('none') 
     fig.tight_layout()
-    plt.savefig(os.path.join(RESULTS_DIR, 'figures', 'fig_S3B.png'))
+    plt.savefig(os.path.join(RESULTS_DIR, 'figures', 'fig_S4B.png'))
     plt.close()
 
-def fig_3D_S3C():
+def fig_3D_S4C():
     preds = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','cross_study_val','pred_species_leaveonestudyout.csv'),index_col=0)
     y_vals = preds['y_true'].values
     y_preds = preds['y_pred'].values
@@ -490,10 +524,10 @@ def fig_3D_S3C():
     )
     leg.get_frame().set_edgecolor('none') 
     plt.tight_layout()
-    plt.savefig(os.path.join(RESULTS_DIR, 'figures', 'fig_S3C.png'))
+    plt.savefig(os.path.join(RESULTS_DIR, 'figures', 'fig_S4C.png'))
     plt.close()
 
-def fig_S4AB(): 
+def fig_S5AB(): 
     save_path = os.path.join(RESULTS_DIR,'figures')
     pred_zhao = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','zhao2020','pred_species.csv'),index_col=0)
     pred_wang = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','wang2019','pred_species.csv'),index_col=0)
@@ -501,27 +535,61 @@ def fig_S4AB():
     predictions = [pred_zhao,pred_wang,pred_chen]
     labels = ["Zhao et al. 2020","Wang et al. 2019","Chen et al. 2024"]
     colors = ['C1','C0','C2']
-    plot_utils.plot_roc_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.5,os.path.join(RESULTS_DIR,'figures','fig_S4A.png'))
-    plot_utils.plot_pr_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.5,os.path.join(RESULTS_DIR,'figures','fig_S4B.png'),'all')
+    plot_utils.plot_roc_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.5,os.path.join(RESULTS_DIR,'figures','fig_S5A.png'))
+    plot_utils.plot_pr_curves(predictions,labels,colors,"Evaluation of predictors on \n held-out samples",8.5,os.path.join(RESULTS_DIR,'figures','fig_S5B.png'),'all')
+
+def fig_S6():
+    top_n=30
+    coef = pd.read_csv(os.path.join(RESULTS_DIR,'predictions','cross_study_val','species_leaveonestudyout_coefs.csv'),index_col=0)
+    mean_abs_importance = coef.abs().mean(axis=1)
+    top_features = mean_abs_importance.sort_values(ascending=False).head(top_n).index
+    coef_top = coef.loc[top_features]
+    coef_top_sorted = coef_top.mean(axis=1).sort_values(ascending=False).index
+    coef_top = coef_top.loc[coef_top_sorted]
+    plt.figure(figsize=(6, 8))
+    ax = sns.heatmap(
+        coef_top,
+        cmap='vlag',        
+        center=0,
+        cbar_kws={"label": "Coefficient"},
+        linewidths=0.5,
+        linecolor='gray'
+    )
+    left_out_study=['Chen et al. 2024','South Africa','Wang et al. 2019','Zhao et al. 2020']
+    names=['Prevotella heparinolytica','Streptococcus mitis','Cryptobacterium curtum', 'Prevotella saccharolytica','Perlabentimonas gracilis','Eikenella exigua','Centipeda sp.','Streptococcus parasanguinis',
+           'SDRW01 sp007845485','Butyrivibrio sp900102515','Anaeroglobus micronuciformis','Granulicatella elegans','Capnocytophaga sp000466425','Capnocytophaga leadbetteri','Eikenella corrodens','Pyramidobacter piscolens',
+           'Veillonella parvula','F0058 sp000163695','Neisseria macacae','Neisseria elongata','Campylobacter gracilis','Actninomyces johnsonii','Treponema amylovorum','Bergeyella A 791830','Haemophilus sputorum',
+           'Streptococcus cristatus B','Neisseria subflava','Fusobacterium periodonticum D','Aggregatibacter 736122','Haemophilus D 736121']
+
+    ax.set_xticklabels(left_out_study,rotation=90)
+    ax.set_yticklabels(names)
+    plt.ylabel("Taxon")
+    plt.title(f"Top {top_n} features across models\n(leave-one-study-out)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, 'figures', 'fig_S5.png'))
+    plt.close()
+
 
 def main():
     data = load_data()
-    table_S1(data['metadata'])
+    table_1(data['metadata'])
     # diversity
     fig_1A(data['rarefied_table'])
-    fig_1B_S1()
+    fig_1B_S1B()
     # differential abundance
     fig_2A(data['feature_ra'],data['taxonomy'])
     fig_2B(data['feature_ra'],data['taxonomy'])
     fig_2C(data['feature_ra'],data['taxonomy'])
     # predictions
-    fig_3A_S3A()
+    fig_3A_S4A()
     fig_3B()
     fig_S2A()
     fig_S2B()
-    fig_3C_S3B()
-    fig_3D_S3C()
-    fig_S4AB()
+    fig_3C_S4B()
+    fig_3D_S4C()
+    fig_S5AB()
+    fig_S6()
+
 
 if __name__ == "__main__":
     main() 
