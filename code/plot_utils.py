@@ -37,13 +37,16 @@ def sdi(counts):
     N = sum(counts)
     return -sum(p(n, N) for n in counts if n != 0)
 
-def taxa_boxplot(feature_table,taxa,p,log,bottom_lim,saveas):
+def taxa_boxplot(feature_table,taxa,p,log,bottom_lim,saveas,jitter):
     cancer = [int("CESCC" in sample_id) for sample_id in feature_table.index]
     my_pal = {0: "#00AEEF", 1: "#ED1C24"}
     sns.set_theme(style="white", palette=None)
     sns.set_style("ticks")
     fig, ax = plt.subplots(figsize=(2.7,3.6))
     y_data = feature_table[taxa] + 1e-4
+    if jitter:
+        eps = np.random.normal(loc=0, scale=1.5e-5, size=len(y_data))
+        y_data = y_data + eps
     if log: 
         ax.set_ylim(bottom_lim,2)
         ax.set_yscale("log")
@@ -192,10 +195,18 @@ def plot_roc_curves(predictions,labels,colors,title,legendsize,saveas):
     sns.set_theme(style="white", palette=None)
     sns.set_style("ticks")
     fig, ax = plt.subplots(figsize=(4.5, 4.5))
+    roc_tables = []
     for model, label, color in zip(predictions, labels, colors):
         fpr, tpr, _ = metrics.roc_curve(model['y_test'], model['y_pred'])
         auc = metrics.roc_auc_score(model['y_test'], model['y_pred'])
         ax.plot(fpr, tpr, label=f"{label} (auROC={auc:.2f})", color=color,lw=2)
+        roc_tables.append(
+            pd.DataFrame({
+                "model": label,
+                "fpr": fpr,
+                "tpr": tpr,
+            })
+        )
     plt.plot([0, 1], [0, 1], linestyle='--', color='grey',linewidth=1.5)
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
@@ -217,6 +228,7 @@ def plot_roc_curves(predictions,labels,colors,title,legendsize,saveas):
     fig.tight_layout()
     plt.savefig(saveas)
     plt.close()
+    return pd.concat(roc_tables, ignore_index=True)
 
 def plot_pr_curves(predictions, labels, colors, title, legendsize,saveas,class_balance):
     assert len(predictions) == len(labels) == len(colors), "Mismatched input lengths"
